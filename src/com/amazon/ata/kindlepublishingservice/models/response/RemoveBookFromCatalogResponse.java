@@ -1,6 +1,13 @@
 package com.amazon.ata.kindlepublishingservice.models.response;
 
 public class RemoveBookFromCatalogResponse {
-    public RemoveBookFromCatalogResponse() {
+
+    private String bookId;
+    public RemoveBookFromCatalogResponse(String bookId) {
+        this.bookId = bookId;
+    }
+
+    public String getBookId() {
+        return bookId;
     }
 }
