@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -30,6 +31,24 @@ public class PublishingStatusDao {
         this.dynamoDbMapper = dynamoDbMapper;
     }
 
+    public List<PublishingStatusItem> getPublishingStatusItems(String publishingRecordId) {
+
+        PublishingStatusItem item = new PublishingStatusItem();
+        item.setPublishingRecordId(publishingRecordId);
+
+        DynamoDBQueryExpression<PublishingStatusItem> queryExpression =
+                new DynamoDBQueryExpression<PublishingStatusItem>().withHashKeyValues(item);
+
+        List<PublishingStatusItem> publishingStatusItemList = new ArrayList<>(dynamoDbMapper.query(
+                PublishingStatusItem.class, queryExpression));
+
+        if (publishingStatusItemList.isEmpty()) {
+            throw new PublishingStatusNotFoundException("PublishingStatusItem not found.");
+        }
+
+        return publishingStatusItemList;
+    }
+
     /**
      * Updates the publishing status table for the given publishingRecordId with the provided
      * publishingRecordStatus. If the bookId is provided it will also be stored in the record.
@@ -39,6 +58,7 @@ public class PublishingStatusDao {
      * @param bookId The id of the book associated with the request, may be null
      * @return The stored PublishingStatusItem.
      */
+
     public PublishingStatusItem setPublishingStatus(String publishingRecordId,
                                                     PublishingRecordStatus publishingRecordStatus,
                                                     String bookId) {

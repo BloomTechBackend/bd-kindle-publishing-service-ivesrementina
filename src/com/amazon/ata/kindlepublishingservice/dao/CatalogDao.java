@@ -3,8 +3,11 @@ package com.amazon.ata.kindlepublishingservice.dao;
 import com.amazon.ata.kindlepublishingservice.dynamodb.models.CatalogItemVersion;
 import com.amazon.ata.kindlepublishingservice.exceptions.BookNotFoundException;
 
+
+import com.amazon.ata.kindlepublishingservice.publishing.BookPublishRequest;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+
 
 import java.util.List;
 import javax.inject.Inject;
@@ -29,33 +32,80 @@ public class CatalogDao {
      * @param bookId Id associated with the book.
      * @return The corresponding CatalogItem from the catalog table.
      */
-    public CatalogItemVersion getBookFromCatalog(String bookId) {
+
+    public CatalogItemVersion getBookFromCatalog(BookPublishRequest bookId) {
         CatalogItemVersion book = getLatestVersionOfBook(bookId);
 
-        if (book == null || book.isInactive()) {
+        if (book == null ) {
             throw new BookNotFoundException(String.format("No book found for id: %s", bookId));
         }
 
         return book;
     }
 
-    // Returns null if no version exists for the provided bookId
-    private CatalogItemVersion getLatestVersionOfBook(String bookId) {
+    public CatalogItemVersion getBookFromCatalog(String bookId) {
+
+        CatalogItemVersion book = getLatestVersionOfBook(bookId);
+
+        if (book == null) {
+            throw new BookNotFoundException("No book found for id: " + bookId);
+        }
+
+        return book;
+    }
+
+    private CatalogItemVersion getLatestVersionOfBook(BookPublishRequest bookPublishRequest) {
+
+        if (bookPublishRequest == null) {
+            return null;
+        }
+
         CatalogItemVersion book = new CatalogItemVersion();
-        book.setBookId(bookId);
+
+        book.setBookId(bookPublishRequest.getBookId());
+        book.setTitle(bookPublishRequest.getTitle());
+        book.setAuthor(bookPublishRequest.getAuthor());
+        book.setGenre(bookPublishRequest.getGenre());
+        book.setText(bookPublishRequest.getText());
 
         DynamoDBQueryExpression<CatalogItemVersion> queryExpression = new DynamoDBQueryExpression()
-            .withHashKeyValues(book)
-            .withScanIndexForward(false)
-            .withLimit(1);
+                .withHashKeyValues(book)
+                .withScanIndexForward(false)
+                .withLimit(1);
 
         List<CatalogItemVersion> results = dynamoDbMapper.query(CatalogItemVersion.class, queryExpression);
+
         if (results.isEmpty()) {
-            throw new BookNotFoundException(String.format("No book found for id: %s", bookId));
+
+            throw new BookNotFoundException("Book not found");
+
+        }
+
+        return results.get(0);
+    }
+    private CatalogItemVersion getLatestVersionOfBook(String bookPublishRequest) {
+
+        if (bookPublishRequest == null) {
+            return null;
+        }
+
+        CatalogItemVersion book = new CatalogItemVersion();
+
+
+        DynamoDBQueryExpression<CatalogItemVersion> queryExpression = new DynamoDBQueryExpression()
+                .withHashKeyValues(book)
+                .withScanIndexForward(false)
+                .withLimit(1);
+
+        List<CatalogItemVersion> results = dynamoDbMapper.query(CatalogItemVersion.class, queryExpression);
+
+        if (results.isEmpty()) {
+
+            throw new BookNotFoundException("Book not found");
+
         }
         return results.get(0);
     }
-
     public void removeBook(String bookId) {
        CatalogItemVersion book = dynamoDbMapper.load(getLatestVersionOfBook(bookId));
         if (book == null || book.isInactive()) {
@@ -65,3 +115,4 @@ public class CatalogDao {
        dynamoDbMapper.save(book);
     }
 }
+
