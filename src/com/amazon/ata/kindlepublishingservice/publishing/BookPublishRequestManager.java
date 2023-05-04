@@ -3,26 +3,25 @@ package com.amazon.ata.kindlepublishingservice.publishing;
 import com.amazon.ata.kindlepublishingservice.dao.CatalogDao;
 
 import javax.inject.Inject;
-import java.util.LinkedList;
+import javax.inject.Singleton;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+@Singleton
 public class BookPublishRequestManager {
-    private CatalogDao catalogDao;
-    Queue<BookPublishRequest> bookPublishRequestQueue = new LinkedList<>();
+    Queue<BookPublishRequest> queue;
 
     @Inject
-    public BookPublishRequestManager(CatalogDao catalogDao) {
-        this.catalogDao = catalogDao;
+    public BookPublishRequestManager() {
+        queue = new ConcurrentLinkedQueue<>();
     }
 
-
-
-    public BookPublishRequest addBookPublishRequest(BookPublishRequest bpr) {
-        bookPublishRequestQueue.add(bpr);
-        return bpr;
+    public void addBookPublishRequest(BookPublishRequest request) {
+        queue.offer(request);
     }
 
     public BookPublishRequest getBookPublishRequestToProcess() {
-            return bookPublishRequestQueue.poll();
+        return queue.poll();
     }
 }
+

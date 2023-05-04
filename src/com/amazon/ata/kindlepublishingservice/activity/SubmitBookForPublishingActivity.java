@@ -55,8 +55,8 @@ public class SubmitBookForPublishingActivity {
         final BookPublishRequest bookPublishRequest = BookPublishRequestConverter.toBookPublishRequest(request);
 
         // TODO: If there is a book ID in the request, validate it exists in our catalog
-        if (bookPublishRequest.getBookId() != null) {
-            catalogDao.getBookFromCatalog(bookPublishRequest);
+        if (request.getBookId() != null) {
+            catalogDao.validateBookExists(request.getBookId());
         }
         // TODO: Submit the BookPublishRequest for processing
 
